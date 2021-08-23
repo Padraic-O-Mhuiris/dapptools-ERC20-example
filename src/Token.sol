@@ -21,4 +21,27 @@ contract ZXX {
 
     }
 
+    // external always(?) cheaper
+    // test transferFrom external or public
+    // have transfer call transferFrom or not
+    function transfer(address to, uint256 amount) external returns (bool) {
+
+        // memoize balanceOf[msg.sender] ???? or will optimizer do it for us?
+        uint256 sender = balanceOf[msg.sender];
+        require(sender >= amount, "insufficient amount");
+
+        // solc 0.8.0 has automatic over/underflow checks?
+        // does the order matter?
+        balanceOf[to] += amount;
+        sender -= amount;
+
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    // approve
+    // approveEvent
+    // transferFrom
+    // mint
+    // burn
 }
