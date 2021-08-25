@@ -29,22 +29,17 @@ contract ZXX is IExtendedERC20 {
     }
 
     function transfer(address to, uint256 amount) external override returns (bool) {
-        return transferFrom(msg.sender, to, amount);
-    }
-
-    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
-        uint256 balance = balanceOf[from];
-        require(balance >= amount, "insufficient balance");
-
-        if (from != msg.sender) {
-            uint256 allowed = allowance[from][msg.sender];
-            require(allowed >= amount, "insufficient allowance");
-            allowance[from][msg.sender] = allowed - amount;
-        }
-
-        balanceOf[from] = balance - amount;
+        balanceOf[msg.sender] -= amount;
         balanceOf[to] += amount;
 
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external override returns (bool) {
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
         emit Transfer(from, to, amount);
         return true;
     }

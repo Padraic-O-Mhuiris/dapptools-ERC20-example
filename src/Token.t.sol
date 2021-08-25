@@ -5,7 +5,6 @@ pragma solidity ^0.8.6;
 import "ds-test/test.sol";
 
 import "./Token.sol";
-import "./Token2.sol";
 
 contract User {
     function doApprove(IExtendedERC20 zxx, address to, uint256 amount) external returns (bool) {
@@ -27,7 +26,6 @@ contract User {
 
 contract ZxxTest is DSTest {
     ZXX zxx;
-    ZXX2 zxx2;
     User u1;
     User u2;
     User u3;
@@ -35,7 +33,6 @@ contract ZxxTest is DSTest {
 
     function setUp() public {
         zxx = new ZXX();
-        zxx2 = new ZXX2();
         u1 = new User();
         u2 = new User();
         u3 = new User();
@@ -102,12 +99,6 @@ contract ZxxTest is DSTest {
         emit log_named_uint("ZXX", gas - gasleft());
     }
 
-    function test_transfer_gas_usage2() public {
-        uint256 gas = gasleft();
-        zxx2.transfer(address(0x1), 1 ether);
-        emit log_named_uint("ZXX2", gas - gasleft());
-    }
-
     function test_transfer_from_gas_usage() public {
         zxx.transfer(address(u1), 1 ether);
         assertEq(zxx.balanceOf(address(u1)), 1 ether);
@@ -124,23 +115,6 @@ contract ZxxTest is DSTest {
         assertEq(zxx.balanceOf(address(u2)), 0.5 ether);
     }
 
-    function test_transfer_from_gas_usage2() public {
-        zxx2.transfer(address(u3), 1 ether);
-        assertEq(zxx2.balanceOf(address(u3)), 1 ether);
-
-        u3.doApprove(zxx2, address(u4), 0.5 ether);
-        assertEq(zxx2.allowance(address(u3), address(u4)), 0.5 ether);
-
-        uint256 gas = gasleft();
-        u4.doTransferFrom(zxx2, address(u3), address(u4), 0.5 ether);
-        emit log_named_uint("ZXX2", gas - gasleft());
-
-        assertEq(zxx2.allowance(address(u3), address(u4)), 0 ether);
-        assertEq(zxx2.balanceOf(address(u3)), 0.5 ether);
-        assertEq(zxx2.balanceOf(address(u4)), 0.5 ether);
-    }
-
-
     function prove_transfer(uint supply, address usr, uint amt) public {
         zxx.burn(zxx.totalSupply());
 
@@ -151,23 +125,6 @@ contract ZxxTest is DSTest {
         uint prebal = zxx.balanceOf(usr);
         zxx.transfer(usr, amt);
         uint postbal = zxx.balanceOf(usr);
-
-        uint expected = usr == address(this)
-                        ? 0    // self transfer is a noop
-                        : amt; // otherwise `amt` has been transfered to `usr`
-        assertEq(expected, postbal - prebal);
-    }
-
-    function prove_transfer2(uint supply, address usr, uint amt) public {
-        zxx2.burn(zxx2.totalSupply());
-
-        if (amt > supply) return; // no underflow
-
-        zxx2.mint(address(this), supply);
-
-        uint prebal = zxx2.balanceOf(usr);
-        zxx2.transfer(usr, amt);
-        uint postbal = zxx2.balanceOf(usr);
 
         uint expected = usr == address(this)
                         ? 0    // self transfer is a noop
