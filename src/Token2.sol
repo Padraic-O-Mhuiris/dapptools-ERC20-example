@@ -4,7 +4,7 @@ pragma solidity ^0.8.6;
 
 import "./IExtendedERC20.sol";
 
-contract ZXX is IExtendedERC20 {
+contract ZXX2 is IExtendedERC20 {
     string constant public name = "Enzo Nicolas Perez Token";
     string constant public symbol = "ENP";
     uint8 constant public decimals = 18;
@@ -29,20 +29,24 @@ contract ZXX is IExtendedERC20 {
     }
 
     function transfer(address to, uint256 amount) external override returns (bool) {
-        return transferFrom(msg.sender, to, amount);
+        uint256 balance = balanceOf[msg.sender];
+        require(balance >= amount, "insufficient balance");
+        balanceOf[msg.sender] = balance - amount;
+        balanceOf[to] += amount;
+
+        emit Transfer(msg.sender, to, amount);
+        return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external override returns (bool) {
+        uint256 allowanceAmnt = allowance[from][msg.sender];
+        require(allowanceAmnt >= amount, "insufficient allowance");
+        allowance[from][msg.sender] = allowanceAmnt - amount;
+
         uint256 balance = balanceOf[from];
         require(balance >= amount, "insufficient balance");
-
-        if (from != msg.sender) {
-            uint256 allowed = allowance[from][msg.sender];
-            require(allowed >= amount, "insufficient allowance");
-            allowance[from][msg.sender] = allowed - amount;
-        }
-
         balanceOf[from] = balance - amount;
+
         balanceOf[to] += amount;
 
         emit Transfer(from, to, amount);
